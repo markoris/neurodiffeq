@@ -22,7 +22,8 @@
   author={Liu, Shuheng and Protopapas, Pavlos and Sondak, David and Chen, Feiyu},
   journal={arXiv preprint arXiv:2502.12177},
   year={2025}
-}```
+}
+```
 
 ------
 
