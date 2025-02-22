@@ -5,7 +5,7 @@
 ![PyPI](https://img.shields.io/pypi/v/neurodiffeq?color=blueviolet&label=PyPI&logoColor=blueviolet) ![GitHub issues](https://img.shields.io/github/issues/NeuroDiffGym/neurodiffeq?color=green) [![Build Status](https://app.travis-ci.com/NeuroDiffGym/neurodiffeq.svg?branch=master)](https://app.travis-ci.com/NeuroDiffGym/neurodiffeq) [![codecov](https://codecov.io/gh/NeuroDiffGym/neurodiffeq/branch/master/graph/badge.svg)](https://codecov.io/gh/NeuroDiffGym/neurodiffeq) [![Documentation Status](https://readthedocs.org/projects/neurodiffeq/badge/?version=latest)](https://neurodiffeq.readthedocs.io/en/latest/?badge=latest) [![DOI](https://joss.theoj.org/papers/10.21105/joss.01931/status.svg)](https://doi.org/10.21105/joss.01931)
 
 # Citation
-**A 2nd NeuroDiffEq paper has been published. Please make sure to cite both if you have been using features that became available after the 2020 version. **
+**A 2nd NeuroDiffEq paper has been published. Please make sure to cite both if you have been using features that became available after the 2020 version.**
 ```
 @article{chen2020neurodiffeq,
   title={NeuroDiffEq: A Python package for solving differential equations with neural networks},
