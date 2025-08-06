@@ -10,7 +10,7 @@ from ordered_set import OrderedSet
 import torch
 import torch.nn as nn
 from torch.optim import Adam
-from torch.optim.lr_scheduler import SequentialLR, ConstantLR, ExponentialLR
+from torch.optim.lr_scheduler import ConstantLR
 from tqdm.auto import tqdm
 
 from .solvers_utils import PretrainedSolver
@@ -114,7 +114,7 @@ class BaseSolver(ABC, PretrainedSolver):
     @deprecated_alias(criterion='loss_fn')
     def __init__(self, diff_eqs, conditions,
                  nets=None, train_generator=None, valid_generator=None, analytic_solutions=None,
-                 optimizer=None, loss_fn=None, n_batches_train=1, n_batches_valid=4,
+                 optimizer=None, scheduler=None, loss_fn=None, n_batches_train=1, n_batches_valid=4,
                  metrics=None, n_input_units=None, n_output_units=None,
                  # deprecated arguments are listed below
                  shuffle=None, batch_size=None):
@@ -181,11 +181,7 @@ class BaseSolver(ABC, PretrainedSolver):
         self.metrics_history.update({'valid__' + name: [] for name in self.metrics_fn})
 
         self.optimizer = optimizer if optimizer else Adam(OrderedSet(chain.from_iterable(n.parameters() for n in self.nets)))
-        scheduler1 = ConstantLR(self.optimizer, factor=1)
-        scheduler2 = ExponentialLR(self.optimizer, gamma=0.9995)
-        scheduler3 = ConstantLR(self.optimizer, factor=1e-3, total_iters=100000)
-        self.scheduler = SequentialLR(self.optimizer, schedulers=[scheduler1, scheduler2, scheduler3], milestones=[5000, 18800])
-        #self.scheduler = ExponentialLR(self.optimizer, gamma=0.9999)
+        self.scheduler = scheduler if scheduler else ConstantLR(self.optimizer, factor=1) 
         self._set_loss_fn(loss_fn)
 
         def make_pair_dict(train=None, valid=None):
@@ -1307,7 +1303,7 @@ class BundleSolver1D(BaseSolver):
     def __init__(self, ode_system, conditions, t_min, t_max,
                  theta_min=None, theta_max=None, eq_param_index=(),
                  nets=None, train_generator=None, valid_generator=None, analytic_solutions=None, optimizer=None,
-                 loss_fn=None, n_batches_train=1, n_batches_valid=4, metrics=None, n_output_units=1,
+                 scheduler=None, loss_fn=None, n_batches_train=1, n_batches_valid=4, metrics=None, n_output_units=1,
                  # deprecated arguments are listed below
                  batch_size=None, shuffle=None):
 
@@ -1375,6 +1371,7 @@ class BundleSolver1D(BaseSolver):
             valid_generator=valid_generator,
             analytic_solutions=analytic_solutions,
             optimizer=optimizer,
+            scheduler=scheduler,
             loss_fn=loss_fn,
             n_batches_train=n_batches_train,
             n_batches_valid=n_batches_valid,
