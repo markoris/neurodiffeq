@@ -10,6 +10,7 @@ from ordered_set import OrderedSet
 import torch
 import torch.nn as nn
 from torch.optim import Adam
+from torch.optim.lr_scheduler import SequentialLR, ConstantLR, ExponentialLR
 from tqdm.auto import tqdm
 
 from .solvers_utils import PretrainedSolver
@@ -180,6 +181,11 @@ class BaseSolver(ABC, PretrainedSolver):
         self.metrics_history.update({'valid__' + name: [] for name in self.metrics_fn})
 
         self.optimizer = optimizer if optimizer else Adam(OrderedSet(chain.from_iterable(n.parameters() for n in self.nets)))
+        scheduler1 = ConstantLR(self.optimizer, factor=1)
+        scheduler2 = ExponentialLR(self.optimizer, gamma=0.9995)
+        scheduler3 = ConstantLR(self.optimizer, factor=1e-3, total_iters=100000)
+        self.scheduler = SequentialLR(self.optimizer, schedulers=[scheduler1, scheduler2, scheduler3], milestones=[5000, 18800])
+        #self.scheduler = ExponentialLR(self.optimizer, gamma=0.9999)
         self._set_loss_fn(loss_fn)
 
         def make_pair_dict(train=None, valid=None):
@@ -339,6 +345,7 @@ class BaseSolver(ABC, PretrainedSolver):
                     self.optimizer.step(closure=closure)
         """
         self.optimizer.step(closure=closure)
+        self.scheduler.step()
 
     def _run_epoch(self, key):
         r"""Run an epoch on train/valid points, update history, and perform an optimization step if key=='train'.
