@@ -4,22 +4,27 @@ import torch
 import numpy as np
 from typing import List
 
+torch._dynamo.disable()
+device = torch.device('mps')
+#device = torch.device('cpu')
+torch.set_default_device(device)
+torch.set_default_dtype(torch.float32)
 
 def _chebyshev_first(a, b, n):
-    nodes = torch.cos(((torch.arange(n) + 0.5) / n) * np.pi)
+    nodes = torch.cos(((torch.arange(n) + 0.5) / n) * torch.pi)
     nodes = ((a + b) + (b - a) * nodes) / 2
     nodes.requires_grad_(True)
     return nodes
 
 
 def _chebyshev_second(a, b, n):
-    nodes = torch.cos(torch.arange(n) / float(n - 1) * np.pi)
+    nodes = torch.cos(torch.arange(n) / float(n - 1) * torch.pi)
     nodes = ((a + b) + (b - a) * nodes) / 2
     nodes.requires_grad_(True)
     return nodes
 
 def _chebyshev_second_noisy(a, b, n):
-    nodes = torch.cos((torch.arange(n) + (torch.rand(n) * 2 - 1)) / float(n - 1) * np.pi)
+    nodes = torch.cos((torch.arange(n) + (torch.rand(n) * 2 - 1)) / float(n - 1) * torch.pi)
     nodes = ((a + b) + (b - a) * nodes) / 2
     nodes.requires_grad_(True)
     return nodes
@@ -261,8 +266,8 @@ class Generator2D(BaseGenerator):
                 self.noise_xstd = ((xy_max[0] - xy_min[0]) / grid[0]) / 4.0
                 self.noise_ystd = ((xy_max[1] - xy_min[1]) / grid[1]) / 4.0
             self.getter = lambda: (
-                torch.normal(mean=self.grid_x, std=self.noise_xstd),
-                torch.normal(mean=self.grid_y, std=self.noise_ystd)
+                torch.normal(mean=self.grid_x, std=torch.ones_like(self.grid_x)*self.noise_xstd),#, dtype=torch.float32),
+                torch.normal(mean=self.grid_y, std=torch.ones_like(self.grid_y)*self.noise_ystd)#, dtype=torch.float32)
             )
         elif method in ['chebyshev1', 'chebyshev']:
             x = _chebyshev_first(xy_min[0], xy_max[0], grid[0])
@@ -300,6 +305,7 @@ class Generator2D(BaseGenerator):
             return (grid_x.flatten(), grid_y.flatten())
 
     def get_examples(self):
+        if self.method=='chebyshev2-noisy' or self.method=='latin-hypercube': return self.getter
         return self.getter()
 
     def _internal_vars(self) -> dict:
@@ -519,13 +525,13 @@ class GeneratorND(BaseGenerator):
             elif method == 'log-spaced':
                 r_min_log = np.log10(r_min[i])
                 r_max_log = np.log10(r_max[i])
-                x = torch.logspace(r_min_log, r_max_log, grid[i], requires_grad=True)
+                x = np.logspace(r_min_log, r_max_log, grid[i], requires_grad=True)
                 noise_rstd_tensor = (noise_rstd * torch.logspace(r_min_log, r_max_log, grid[i]))
             elif method == 'exp-spaced':
                 r_min_exp = base[i] ** r_min[i]
                 r_max_exp = base[i] ** r_max[i]
                 x = torch.linspace(r_min_exp, r_max_exp, grid[i], requires_grad=True)
-                x = (torch.log(x) / np.log(base[i])).clone().detach().requires_grad_(True)
+                x = (torch.log(x) / torch.log(base[i])).clone().detach().requires_grad_(True)
                 noise_rstd_tensor = (noise_rstd * x).clone().detach()
             elif method in ['chebyshev', 'chebyshev1']:
                 x = _chebyshev_first(r_min[i], r_max[i], grid[i])
