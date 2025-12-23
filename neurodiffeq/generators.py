@@ -50,7 +50,7 @@ def _compute_log_negative(t_min, t_max, whence):
             f"please pass in {suggested_t_min} and {suggested_t_max}"
         )
 
-    return np.log10(t_min), np.log10(t_max)
+    return torch.log10(t_min), torch.log10(t_max)
 
 
 class BaseGenerator:
@@ -168,7 +168,7 @@ class Generator1D(BaseGenerator):
         elif method == 'log-spaced-noisy':
             start, end = _compute_log_negative(t_min, t_max, self.__class__)
             self.examples = torch.logspace(start, end, self.size, requires_grad=True)
-            self.getter = lambda: torch.normal(mean=self.examples, std=self.noise_std)
+            self.getter = lambda: torch.normal(mean=self.examples, std=torch.ones_like(self.examples)*self.noise_std)
         elif method in ['chebyshev', 'chebyshev1']:
             self.examples = _chebyshev_first(t_min, t_max, size)
             self.getter = lambda: self.examples
