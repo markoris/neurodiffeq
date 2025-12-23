@@ -347,7 +347,7 @@ class BundleIVP(BaseCondition, _BundleConditionMixin):
         u_0_prime = self._get_parameter('u_0_prime', theta)
 
         if u_0_prime is None:
-            return torch.tensor(u_0(theta[0].flatten()), dtype=torch.float32).reshape(-1, 1) + (1 - torch.exp(-t + t_0)) * output_tensor
+            return u_0(theta[0].flatten()).reshape(-1, 1) + (1 - torch.exp(-t + t_0)) * output_tensor
         else:
             return u_0 + (t - t_0) * u_0_prime + ((1 - torch.exp(-t + t_0)) ** 2) * output_tensor
 
