@@ -179,6 +179,9 @@ class Generator1D(BaseGenerator):
             self.getter = lambda: _chebyshev_second_noisy(t_min, t_max, size)
         elif method == 'latin-hypercube':
             self.getter = lambda: _latin_hypercube(t_min, t_max, size)
+        elif method == 'log-uniform-int':
+            self.examples = torch.log10(torch.randint(int(t_min), int(t_max), (size,)))
+            self.getter = lambda: self.examples
         else:
             raise ValueError(f'Unknown method: {method}')
 
